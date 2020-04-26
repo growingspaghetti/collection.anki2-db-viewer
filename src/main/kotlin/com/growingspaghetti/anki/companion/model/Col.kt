@@ -259,3 +259,14 @@ fun DConf.html(): String {
     </tbody></table>
     """.trimIndent()
 }
+
+data class Tags(
+        val dialogue: Int,
+        val leech: Int,
+        val marked: Int
+)
+
+fun Col.tagsObject(): Tags {
+    val tags = KtObjectMapper.mapper.readTree(this.tags)
+    return KtObjectMapper.mapper.convertValue(tags, Tags::class.java)
+}

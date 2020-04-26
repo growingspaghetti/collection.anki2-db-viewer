@@ -11,9 +11,11 @@ class AnkiDbService(
 ) {
     val sqliteRepository = SqliteRepository(sqliteDbResolver)
 
-    private fun col(): Col {
-        return sqliteRepository.fetchCol()
-    }
+    private fun col() = sqliteRepository.fetchCol()
+    private fun cards() = sqliteRepository.fetchCards()
+    private fun notes() = sqliteRepository.fetchNotes()
+    private fun revlogs() = sqliteRepository.fetchRevLogs()
+    private fun graves() = sqliteRepository.fetchGraves()
 
     fun fetchCol(): String {
         val col: Col by lazy {
@@ -42,6 +44,41 @@ class AnkiDbService(
             ${col.confObject().html(col.deckList())}
             <hr><h2> DConf </h2>
             $dconfHtml
+            <hr><h2> Tags </h2>
+            ${col.tagsObject()}
         """.trimIndent()
+    }
+
+    fun fetchCards(): String {
+        val cards: List<Card> by lazy {
+            cards()
+        }
+        cards.forEach { println(it) }
+        return "a"
+    }
+
+    fun fetchNotes(): String {
+        val notes: List<Note> by lazy {
+            notes()
+        }
+        //notes.forEach { println(it) }
+        notes.forEach { it.fldFieldList().forEach { s -> println(s) } }
+        return "a"
+    }
+
+    fun fetchRevLogs(): String {
+        val revlogs: List<RevLog> by lazy {
+            revlogs()
+        }
+        revlogs.forEach { println(it) }
+        return "a"
+    }
+
+    fun fetchGraves(): String {
+        val graves: List<Grave> by lazy {
+            graves()
+        }
+        graves.forEach { println(it) }
+        return "a"
     }
 }

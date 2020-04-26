@@ -64,6 +64,10 @@ public class App extends JFrame implements SqliteDbResolvable, Loggable {
 
     try {
       fetchCol();
+      ankiDbService.fetchCards();
+      ankiDbService.fetchNotes();
+      ankiDbService.fetchRevLogs();
+      ankiDbService.fetchGraves();
     } catch (Exception e) {
       e.printStackTrace();
     }
