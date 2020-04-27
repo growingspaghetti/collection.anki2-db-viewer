@@ -2,8 +2,8 @@ package com.growingspaghetti.anki.companion.service;
 
 import com.growingspaghetti.anki.companion.Loggable
 import com.growingspaghetti.anki.companion.SqliteDbResolvable
+import com.growingspaghetti.anki.companion.SqliteRepository
 import com.growingspaghetti.anki.companion.model.*
-import com.growingspaghetti.anki.companion.repository.SqliteRepository
 
 class AnkiDbService(
         sqliteDbResolver: SqliteDbResolvable,
