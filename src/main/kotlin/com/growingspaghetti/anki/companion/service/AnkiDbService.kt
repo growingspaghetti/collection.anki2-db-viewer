@@ -2,8 +2,8 @@ package com.growingspaghetti.anki.companion.service;
 
 import com.growingspaghetti.anki.companion.Loggable
 import com.growingspaghetti.anki.companion.SqliteDbResolvable
-import com.growingspaghetti.anki.companion.SqliteRepository
 import com.growingspaghetti.anki.companion.model.*
+import com.growingspaghetti.anki.companion.repository.SqliteRepository
 
 class AnkiDbService(
         sqliteDbResolver: SqliteDbResolvable,
@@ -12,17 +12,18 @@ class AnkiDbService(
     val sqliteRepository = SqliteRepository(sqliteDbResolver)
 
     private fun col() = sqliteRepository.fetchCol()
-    private fun cards() = sqliteRepository.fetchCards()
-    private fun notes() = sqliteRepository.fetchNotes()
-    private fun revlogs() = sqliteRepository.fetchRevLogs()
-    private fun graves() = sqliteRepository.fetchGraves()
+    private fun cards() = sqliteRepository.fetchAll("cards", Card::class.java)
+    private fun notes() = sqliteRepository.fetchAll("notes", Note::class.java)
+    private fun revlogs() = sqliteRepository.fetchAll("revlog", RevLog::class.java)
+    private fun graves() = sqliteRepository.fetchAll("graves", Grave::class.java)
 
     fun fetchCol(): String {
         val col: Col by lazy {
-            col()
+            col()!!
         }
         println(col)
         log.log(col.toString().replace(" ", "\n"))
+
         println(col.modelList())
         val deckHtml = col.deckList()
                 .map { it.html() }.joinToString("<hr>");
@@ -51,7 +52,7 @@ class AnkiDbService(
 
     fun fetchCards(): String {
         val cards: List<Card> by lazy {
-            cards()
+            cards()!!
         }
         cards.forEach { println(it) }
         return "a"
@@ -59,7 +60,7 @@ class AnkiDbService(
 
     fun fetchNotes(): String {
         val notes: List<Note> by lazy {
-            notes()
+            notes()!!
         }
         //notes.forEach { println(it) }
         notes.forEach { it.fldFieldList().forEach { s -> println(s) } }
@@ -68,7 +69,7 @@ class AnkiDbService(
 
     fun fetchRevLogs(): String {
         val revlogs: List<RevLog> by lazy {
-            revlogs()
+            revlogs()!!
         }
         revlogs.forEach { println(it) }
         return "a"
@@ -76,7 +77,7 @@ class AnkiDbService(
 
     fun fetchGraves(): String {
         val graves: List<Grave> by lazy {
-            graves()
+            graves()!!
         }
         graves.forEach { println(it) }
         return "a"
