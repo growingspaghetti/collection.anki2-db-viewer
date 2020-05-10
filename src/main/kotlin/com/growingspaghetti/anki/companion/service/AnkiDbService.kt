@@ -4,6 +4,7 @@ import com.growingspaghetti.anki.companion.Loggable
 import com.growingspaghetti.anki.companion.SqliteDbResolvable
 import com.growingspaghetti.anki.companion.SqliteRepository
 import com.growingspaghetti.anki.companion.model.*
+import java.io.File
 
 class AnkiDbService(
         sqliteDbResolver: SqliteDbResolvable,
@@ -68,7 +69,12 @@ class AnkiDbService(
         val cards: List<Card> by lazy {
             cards()!!
         }
-        cards.forEach { println(it) }
+        val col: Col by lazy {
+            col()!!
+        }
+        val list = cards.map { it.toString() + "\n" + it.dueReadable(col.crt * 1000) + "\n" + it.ivlReadable() }
+        File("carddue.txt").writeText(list.joinToString(separator = "\n"))
+        System.exit(0)
         return "a"
     }
 
