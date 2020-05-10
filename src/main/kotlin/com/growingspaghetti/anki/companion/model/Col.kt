@@ -62,7 +62,13 @@ data class Deck(
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         val timeToday: Pair<Int, Int>,
         val dyn: Int
-)
+) {
+    companion object {
+        fun columnIdentifiers() = arrayOf("name", "id", "mod", "mid", "conf",
+                "desc", "extendNew", "extendRev", "usn", "collapsed", "browserCollapsed",
+                "newToday", "revToday", "lrnToday", "timeToday", "dyn")
+    }
+}
 
 fun Col.deckList(): List<Deck> {
     val decks = KtObjectMapper.mapper.readTree(this.decks)
@@ -75,6 +81,9 @@ fun Col.deckList(): List<Deck> {
 
 fun Deck.idCreationDate() = Date(this.id)
 fun Deck.modModifiedDate() = Date(this.mod * 1000)
+fun Deck.row() = arrayOf(this.name, this.id, this.mod, this.mid, this.conf,
+        this.desc, this.extendNew, this.extendRev, this.usn, this.collapsed, this.browserCollapsed,
+        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn)
 
 fun Deck.html() = """
 <table><tbody>
@@ -108,10 +117,19 @@ data class Model(
         val css: String,
         val usn: Int,
         val latexsvg: Boolean?
-)
+) {
+    companion object {
+        fun columnIdentifiers() = arrayOf("name", "id", "flds", "tmpls", "tags",
+                "req", "vers", "sortf", "mod", "did", "type",
+                "latexPre", "latexPost", "css", "usn", "latexsvg")
+    }
+}
 
 fun Model.idCreationDate() = Date(this.id)
 fun Model.modModifiedDate() = Date(this.mod * 1000)
+fun Model.row() = arrayOf(this.name, this.id, this.flds, this.tmpls, this.tags,
+        this.req, this.vers, this.sortf, this.mod, this.did, this.type,
+        this.latexPre, this.latexPost, this.css, this.usn, this.latexsvg)
 
 data class Fld(
         val ord: Int,

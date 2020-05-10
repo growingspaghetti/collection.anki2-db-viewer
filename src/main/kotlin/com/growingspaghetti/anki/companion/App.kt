@@ -4,9 +4,7 @@ import com.formdev.flatlaf.FlatLightLaf
 import com.growingspaghetti.anki.companion.service.AnkiDbService
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import org.fife.ui.rtextarea.RTextScrollPane
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.Font
+import java.awt.*
 import java.io.File
 import javax.swing.*
 import javax.swing.text.DefaultEditorKit
@@ -26,8 +24,10 @@ class App : JFrame(), Loggable, SqliteDbResolvable {
     private val rSyntaxTextArea = RSyntaxTextArea(10, 60)
 
     init {
-        this.layout = BorderLayout()
+        layout = BorderLayout()
         title = "Anki database viewer"
+
+        RepeatingReleasedEventsFixer().install()
 
         fileMenu.add(fileOpenItem)
         menuBar.add(fileMenu)
@@ -47,10 +47,12 @@ class App : JFrame(), Loggable, SqliteDbResolvable {
         copy.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"))
         menu.add(copy)
 
-        jEditorPane.contentType = "text/html"
-        jEditorPane.isEditable = false
-        jEditorPane.font = Font("Arial", Font.PLAIN, 13)
-        jEditorPane.componentPopupMenu = menu
+        with(jEditorPane) {
+            contentType = "text/html"
+            isEditable = false
+            font = Font("Arial", Font.PLAIN, 13)
+            componentPopupMenu = menu
+        }
 
 
         val jSplitPane = JSplitPane(JSplitPane.HORIZONTAL_SPLIT)
@@ -60,6 +62,19 @@ class App : JFrame(), Loggable, SqliteDbResolvable {
         westPanel.add(searchField, BorderLayout.NORTH)
         westPanel.add(jTabbedPane, BorderLayout.CENTER)
         jSplitPane.rightComponent = JScrollPane(jEditorPane)
+
+        val deckPanel = JPanel(BorderLayout())
+        //val deckSwingList = DeckSwingList()
+        //deckPanel.add(JScrollPane(deckSwingList))
+        val deckTable = DeckTable()
+        deckPanel.add(JScrollPane(deckTable))
+        jTabbedPane.add("Decks", deckPanel)
+
+        val modelPanel = JPanel(BorderLayout())
+        val modelTable = ModelTable()
+        modelPanel.add(JScrollPane(modelTable))
+        jTabbedPane.add("Models", modelPanel)
+
 
         this.preferredSize = Dimension(1000, 800)
         pack()
@@ -73,6 +88,28 @@ class App : JFrame(), Loggable, SqliteDbResolvable {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+
+        this.defaultCloseOperation = WindowConstants.EXIT_ON_CLOSE
+        val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
+        val gd = ge.defaultScreenDevice
+        gd.fullScreenWindow = this
+        val modeList = gd.displayModes
+        var activeMode: DisplayMode? = null
+        for (mode in modeList) {
+            println(mode)
+            if (mode.width == 800 && mode.height == 600 &&
+                    (activeMode == null
+                            || activeMode.bitDepth < mode.bitDepth || activeMode.bitDepth == mode.bitDepth && activeMode.refreshRate <= mode.refreshRate)) {
+                activeMode = mode
+            }
+        }
+
+        gd.fullScreenWindow = null
+
+        //deckSwingList.setDecks(ankiDbService.decks())
+        deckTable.setDecks(ankiDbService.decks())
+        modelTable.setModels(ankiDbService.models())
     }
 
     fun fetchCol() {

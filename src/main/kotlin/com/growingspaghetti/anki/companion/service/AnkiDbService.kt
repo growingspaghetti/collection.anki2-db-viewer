@@ -17,6 +17,20 @@ class AnkiDbService(
     private fun revlogs() = sqliteRepository.fetchAll("revlog", RevLog::class.java)
     private fun graves() = sqliteRepository.fetchAll("graves", Grave::class.java)
 
+    fun decks(): List<Deck> {
+        val col: Col by lazy {
+            col()!!
+        }
+        return col.deckList()
+    }
+
+    fun models(): List<Model> {
+        val col: Col by lazy {
+            col()!!
+        }
+        return col.modelList()
+    }
+
     fun fetchCol(): String {
         val col: Col by lazy {
             col()!!

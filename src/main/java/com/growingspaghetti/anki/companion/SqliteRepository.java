@@ -105,7 +105,7 @@ public class SqliteRepository {
 
   private Connection getConnection(boolean autoCommit) throws Exception {
     Class.forName("org.sqlite.JDBC");
-    String dbPath = sqliteDbResolvable.getSqliteDb().getAbsolutePath();
+    String dbPath = sqliteDbResolvable.sqliteDb().getAbsolutePath();
     Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
     conn.setAutoCommit(autoCommit);
     return conn;
