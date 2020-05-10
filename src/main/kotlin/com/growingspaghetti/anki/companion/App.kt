@@ -102,5 +102,5 @@ class App : JFrame(), Loggable, SqliteDbResolvable {
         SwingUtilities.invokeLater { rSyntaxTextArea.append(s + "\n") }
     }
 
-    override fun getSqliteDb(): File = sqliteDb
+    override fun sqliteDb(): File = sqliteDb
 }
