@@ -1,7 +1,11 @@
 package com.growingspaghetti.anki.companion;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.growingspaghetti.anki.companion.model.Card;
 import com.growingspaghetti.anki.companion.model.Col;
+import com.growingspaghetti.anki.companion.model.Queue;
+import com.growingspaghetti.anki.companion.model.RevLog;
+import kotlin.reflect.jvm.internal.impl.utils.StringsKt;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -30,6 +34,59 @@ public class SqliteRepository {
       Map<String, Object> map = runner
           .query(conn, "SELECT * FROM col", new MapHandler());
       return KtObjectMapper.mapper.convertValue(map, Col.class);
+    }
+  }
+
+  // https://github.com/ankitects/anki/blob/master/pylib/anki/schedv2.py#L545
+  public List<Card> queue(long deckId, Queue queue, long due) throws Exception {
+    try (Connection conn = getConnection(true)) {
+      String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 256";
+      List<Map<String, Object>> mapList = runner
+          .query(conn, sql, new MapListHandler(), deckId, queue.getV(), due);
+      System.out.println("<" + due);
+      return mapList.stream()
+          .map(m -> KtObjectMapper.mapper.convertValue(m, Card.class))
+          .collect(Collectors.toList());
+    }
+  }
+
+  public List<Card> queueReview(long deckId, Col col, int dayOffset) throws Exception {
+    long millisSinceCreation = System.currentTimeMillis() - col.getCrt() * 1000;
+    int daysSinceCreation = (int) (millisSinceCreation / ConstKt.ONE_DAY);
+    return queue(deckId, Queue.REVIEW, daysSinceCreation + dayOffset);
+  }
+
+  public List<Card> queueDayRelearn(long deckId, Col col, int dayOffset) throws Exception {
+    long millisSinceCreation = System.currentTimeMillis() - col.getCrt() * 1000;
+    int daysSinceCreation = (int) (millisSinceCreation / ConstKt.ONE_DAY);
+    return queue(deckId, Queue.DAY_RELEARN, daysSinceCreation + dayOffset);
+  }
+
+  public List<Card> queueLearning(long deckId, int dayOffset) throws Exception {
+    long secTimestamp = (System.currentTimeMillis() + ConstKt.ONE_DAY * dayOffset) / 1000;
+    return queue(deckId, Queue.RELEARN, secTimestamp);
+  }
+
+  public <T> List<T> findByIds(List<Long> ids, String tableName, Class<T> clazz) throws Exception {
+    try (Connection conn = getConnection(true)) {
+      String sql = String.format("SELECT * FROM %s WHERE id IN (%s)",
+          tableName, StringsKt.join(ids, ","));
+      List<Map<String, Object>> mapList = runner
+          .query(conn, sql, new MapListHandler());
+      return mapList.stream()
+          .map(m -> KtObjectMapper.mapper.convertValue(m, clazz))
+          .collect(Collectors.toList());
+    }
+  }
+
+  public List<RevLog> findRevLogsByCids(List<Long> ids) throws Exception {
+    try (Connection conn = getConnection(true)) {
+      String sql = String.format("SELECT * FROM revlog WHERE cid IN (%s)", StringsKt.join(ids, ","));
+      List<Map<String, Object>> mapList = runner
+          .query(conn, sql, new MapListHandler());
+      return mapList.stream()
+          .map(m -> KtObjectMapper.mapper.convertValue(m, RevLog.class))
+          .collect(Collectors.toList());
     }
   }
 

@@ -10,13 +10,13 @@ import java.util.*
  */
 data class Col(
         val id: Long,
-        val crt: Long,
+        val crt: Long, // creation time. seconds.
         val mod: Long,
-        val scm: Long,
+        val scm: Long, // schema modified time
         val ver: Int,
         val dty: Int, // dirty. not used
-        val usn: Int,
-        val ls: Long,
+        val usn: Int, // update sequence number
+        val ls: Long, // last sync time
         val conf: String,
         val models: String,
         val decks: String,
@@ -53,6 +53,7 @@ data class Deck(
         val usn: Int,
         val collapsed: Boolean,
         val browserCollapsed: Boolean,
+        // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L21
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         val newToday: Pair<Int, Int>,
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
@@ -142,13 +143,13 @@ data class Fld(
 );
 
 data class Templ(
-        val afmt: String,
+        val afmt: String, // format of answer
         val bafmt: String,
         val bqfmt: String,
         val did: kotlin.Any?, // null by default
         val name: String,
         val ord: Int,
-        val qfmt: String
+        val qfmt: String // format of question
 )
 
 fun Col.modelList(): List<Model> {
@@ -158,6 +159,13 @@ fun Col.modelList(): List<Model> {
             .asSequence()
             .map { KtObjectMapper.mapper.convertValue(it.value, Model::class.java) }
             .toList()
+}
+
+fun Col.modelListLazy(): List<Model> {
+    val models: List<Model> by lazy {
+        modelList()
+    }
+    return models
 }
 
 fun Model.html() = """
@@ -174,6 +182,7 @@ fun Model.html() = """
 </tbody></table>
 """.trimIndent()
 
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/config.py
 data class Conf(
         val activeCols: List<String>,
         val lastUnburied: Int,
@@ -187,14 +196,21 @@ data class Conf(
         val dayLearnFirst: Boolean,
         val timeLim: Int,
         val dueCounts: Boolean,
-        val activeDecks: List<Long>,
+        val activeDecks: List<Long>, // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L543
         val sortBackwards: Int, // 0 | 1 ?
         val estTimes: Boolean,
         val newBury: Boolean,
         val addToCur: Boolean,
         val nightMode: Boolean
+        // val schedVer https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/collection.py#L110
 )
 
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L234 due list
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L162
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/sched.py#L539
+// get card
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L322
+// https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L578 learn queue shuffle
 fun Col.confObject(): Conf {
     val conf = KtObjectMapper.mapper.readTree(this.conf)
     return KtObjectMapper.mapper.convertValue(conf, Conf::class.java)
