@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <kotlin.version>1.3.61</kotlin.version>
+        <kotlin.version>1.3.72</kotlin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.class>com.growingspaghetti.anki.companion.App</main.class>
     </properties>
@@ -110,7 +110,7 @@
                         </goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <outfile>A</outfile>
+                            <outfile>kot-anki-companion</outfile>
                             <jar>target/*-SNAPSHOT-jar-with-dependencies.jar</jar>
                             <jre>
                                 <minVersion>11</minVersion>

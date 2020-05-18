@@ -90,5 +90,5 @@ fun Card.ivlReadable(): String {
 }
 
 fun Card.factorReadable(): String {
-    return "When Good is pressed next time, next ivl = current ivl * ${this.factor / 1000}"
+    return "${this.factor.toDouble() / 1000}"
 }

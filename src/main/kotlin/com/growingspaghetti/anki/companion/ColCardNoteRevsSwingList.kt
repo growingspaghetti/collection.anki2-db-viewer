@@ -94,7 +94,7 @@ class ColCardNoteRevsSwingList(
                 }
 
                 val revs = """
-                    ${ccnr.card.queueEnum()}[${ccnr.card.reps}](ivl${ccnr.card.ivlReadable()})@${ccnr.card.dueReadable(Date(ccnr.col.crt * 1000))}
+                    ${ccnr.card.queueEnum()}[${ccnr.card.reps}](ivl ${ccnr.card.ivlReadable()} x ${ccnr.card.factorReadable()})@${ccnr.card.dueReadable(Date(ccnr.col.crt * 1000))}
                     -- ${ccnr.revs.map { SIMPLE_DATE_FORMAT.format(Date(it.id)) }}
                 """.trimIndent()
                 editorPane.text = "<html><div style=\"font-size:20px\">$revs<hr><table valign=\"top\">\n<tr><td>$ans</td></tr></table></div></html>"
