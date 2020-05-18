@@ -1,21 +1,22 @@
 package com.growingspaghetti.anki.companion
 
-import com.growingspaghetti.anki.companion.model.ColCardNoteRevs
-import com.growingspaghetti.anki.companion.model.fldFieldList
-import com.growingspaghetti.anki.companion.model.modelListLazy
+import com.growingspaghetti.anki.companion.model.*
+import javazoom.jl.player.advanced.PlaybackEvent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.File
 import java.io.FileInputStream
+import java.util.*
 import java.util.concurrent.CompletableFuture
-import javax.swing.DefaultListModel
-import javax.swing.JEditorPane
-import javax.swing.JList
-import javax.swing.ListSelectionModel
+import javax.swing.*
 import javax.swing.event.ListSelectionEvent
+import kotlin.collections.ArrayList
 
-
-class ColCardNoteRevsSwingList(private val editorPane: JEditorPane) : JList<ColCardNoteRevs>() {
+class ColCardNoteRevsSwingList(
+        private val editorPane: JEditorPane,
+        private val collectionMediaDir: File,
+        private val playAudioCheckBox: JCheckBox
+) : JList<ColCardNoteRevs>(), PlaybackEventHandleable {
     private val list: MutableList<ColCardNoteRevs> = ArrayList()
     private val model: DefaultListModel<ColCardNoteRevs> = DefaultListModel()
     private var job: Job? = null
@@ -26,11 +27,6 @@ class ColCardNoteRevsSwingList(private val editorPane: JEditorPane) : JList<ColC
         cellRenderer = ListCellRenderableLabel()
         keyListeners.forEach { removeKeyListener(it) }
         applySelectionListener()
-    }
-
-    fun selectNext() {
-        this.selectedIndex =  this.selectedIndex + 1
-        this.ensureIndexIsVisible(this.selectedIndex)
     }
 
     fun setList(colCardNoteRevs: List<ColCardNoteRevs>) {
@@ -69,26 +65,49 @@ class ColCardNoteRevsSwingList(private val editorPane: JEditorPane) : JList<ColC
                 model.flds.forEach {
                     ans = ans.replace("{{" + it.name + "}}\n", fields[it.ord])
                 }
-                ans = ans.replace("src=\"", "src=\"file:/media/local/share/Anki2/User 1/collection.media/")
-//                val m = MP3_PA.matcher(ans)
-//                val sb = StringBuffer()
-//                if (m.find()) {
-//                    CompletableFuture.runAsync(Runnable { Mp3Player().testPlay(File("/media/local/share/Anki2/User 1/collection.media/" + m.group(1))) })
-//                }
-//                m.appendTail(sb)
+                ans = ans.replace("src=\"", "src=\"file:${collectionMediaDir.absolutePath}/")
 
-                val m = MP3_PA.matcher(ans)
-                val sb = StringBuffer()
-                while (m.find()) {
-                    val f = File("/media/local/share/Anki2/User 1/collection.media/" + m.group(1))
-                    CompletableFuture.runAsync(Runnable { Mp3Player(this).play(FileInputStream(f)) }  )
-                    //Mp3Player().testPlay(f)
-                    m.appendReplacement(sb, "")
+                run {
+                    val m = MP3_PA.matcher(ans)
+                    val sb = StringBuffer()
+                    while (m.find()) {
+                        val f = File("${collectionMediaDir.absolutePath}/" + m.group(1))
+                        if (playAudioCheckBox.isSelected) {
+                            CompletableFuture.runAsync(Runnable {
+                                Mp3Player.play(FileInputStream(f), this)
+                            })
+                        }
+                        m.appendReplacement(sb, "")
+                    }
+                    m.appendTail(sb)
+                    ans = sb.toString()
                 }
-                m.appendTail(sb)
-                editorPane.text = "<html><div style=\"font-size:20px\">$sb"
+                run {
+                    val m = IMG_PA.matcher(ans)
+                    val sb = StringBuffer()
+                    while (m.find()) {
+                        m.appendReplacement(sb, m.group())
+                    }
+                    sb.append("</td><td>")
+                    m.appendTail(sb)
+                    ans = sb.toString()
+                }
 
+                val revs = """
+                    ${ccnr.card.queueEnum()}[${ccnr.card.reps}](ivl${ccnr.card.ivlReadable()})@${ccnr.card.dueReadable(Date(ccnr.col.crt * 1000))}
+                    -- ${ccnr.revs.map { SIMPLE_DATE_FORMAT.format(Date(it.id)) }}
+                """.trimIndent()
+                editorPane.text = "<html><div style=\"font-size:20px\">$revs<hr><table valign=\"top\">\n<tr><td>$ans</td></tr></table></div></html>"
             }
+
         }
+    }
+
+    override fun handlePlayback(evt: PlaybackEvent) {
+        if (!playAudioCheckBox.isSelected) {
+            return
+        }
+        selectedIndex += 1
+        ensureIndexIsVisible(selectedIndex)
     }
 }

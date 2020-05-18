@@ -11,3 +11,4 @@ val DATE_FORMATTER = DateTimeFormatter
         .withZone(ZoneId.systemDefault())
 val SIMPLE_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd")
 val MP3_PA = Pattern.compile("\\[sound:([^]]+?)]")
+val IMG_PA = Pattern.compile("<img.*? src=\"([^\"]+?)\".?>")

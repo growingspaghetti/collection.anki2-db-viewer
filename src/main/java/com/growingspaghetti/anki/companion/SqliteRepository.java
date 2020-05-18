@@ -43,7 +43,6 @@ public class SqliteRepository {
       String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 256";
       List<Map<String, Object>> mapList = runner
           .query(conn, sql, new MapListHandler(), deckId, queue.getV(), due);
-      System.out.println("<" + due);
       return mapList.stream()
           .map(m -> KtObjectMapper.mapper.convertValue(m, Card.class))
           .collect(Collectors.toList());

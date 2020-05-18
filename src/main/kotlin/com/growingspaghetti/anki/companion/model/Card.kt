@@ -1,5 +1,8 @@
 package com.growingspaghetti.anki.companion.model
 
+import com.growingspaghetti.anki.companion.SIMPLE_DATE_FORMAT
+import java.util.*
+
 //# Cards
 //##########################################################################
 //# Type: 0=new, 1=learning, 2=due
@@ -64,37 +67,17 @@ fun Card.queueEnum(): Queue {
 }
 
 // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/consts.py#L18
-fun Card.dueReadable(collectionCreationTime: Long): String {
+fun Card.dueReadable(collectionCreationTime: Date): String {
     // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L24
-//    return when (this.type) {
-//        0 /*new*/ -> "new\t${this.due}"
-//        1 /*leaning*/ -> "learning\t${Date(this.due)}"
-//        2 /*due*/ -> "due\t${Date(collectionCreationTime + 86400000 * this.due)}"
-//        3 /*relearning*/ -> "relearning\t${Date(collectionCreationTime + 86400000 * this.due)}"
-//        else -> ""
-//    }
-//    return when (this.queue) {
-//        Queue.SCHED_BURIED.v -> "user buried(In scheduler 2)"
-//        Queue.USER_BURIED.v -> "sched buried (In scheduler 2)/buried(In scheduler 1)"
-//        -1 -> "suspended"
-//        0 -> "new\t${this.due}"
-//        1 -> "learning\t${Date(this.due * 1000)}"
-//        2 -> "due\t${Date(collectionCreationTime + 86400000 * this.due)}"
-//        3 -> "learning \t${Date(collectionCreationTime + 86400000 * this.due)} next rev in at least a day after the previous review"
-//        else -> ""
-//    }
-    return ""
-}
-
-fun Card.queueReadable() {
-    when (this.queue) {
-        -3 -> println("user buried(In scheduler 2)")
-        -2 -> println("sched buried (In scheduler 2)/buried(In scheduler 1)")
-        -1 -> println("suspended")
-        0 -> println("new")
-        1 -> println("learning (1)")
-        2 -> println("due")
-        3 -> println("in learning, next rev in at least a day after the previous review")
+    return when (this.queue) {
+        Queue.MANUALLY_BURIED.v -> "user buried(In scheduler 2)"
+        Queue.SIBLING_BURIED.v -> "sched buried (In scheduler 2)/buried(In scheduler 1)"
+        Queue.SUSPENDED.v -> "suspended"
+        Queue.NEW.v -> "new=${this.due}"
+        Queue.RELEARN.v -> SIMPLE_DATE_FORMAT.format(Date(this.due * 1000))
+        Queue.REVIEW.v -> SIMPLE_DATE_FORMAT.format(Date(collectionCreationTime.time + 86400000 * this.due))
+        Queue.DAY_RELEARN.v -> SIMPLE_DATE_FORMAT.format(Date(collectionCreationTime.time + 86400000 * this.due))
+        else -> throw IllegalStateException()
     }
 }
 
