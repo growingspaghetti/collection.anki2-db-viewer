@@ -139,7 +139,7 @@ class App : JFrame(), SqliteDbResolvable {
         return if (collectionUnderCurrentDir.exists()) {
             collectionUnderCurrentDir
         } else {
-            File("/media/local/share/Anki2/User 1/collection.anki2")
+            File(System.getProperty("user.home") + "/.local/share/Anki2/User 1/collection.anki2")
         }
     }
 }
