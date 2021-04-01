@@ -62,12 +62,13 @@ data class Deck(
         val lrnToday: Pair<Int, Int>,
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         val timeToday: Pair<Int, Int>,
-        val dyn: Int
+        val dyn: Int,
+        val resched: String?
 ) {
     companion object {
         fun columnIdentifiers() = arrayOf("name", "id", "mod", "mid", "conf",
                 "desc", "extendNew", "extendRev", "usn", "collapsed", "browserCollapsed",
-                "newToday", "revToday", "lrnToday", "timeToday", "dyn")
+                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched")
     }
 }
 
@@ -84,7 +85,7 @@ fun Deck.idCreationDate() = Date(this.id)
 fun Deck.modModifiedDate() = Date(this.mod * 1000)
 fun Deck.row() = arrayOf(this.name, this.id, this.mod, this.mid, this.conf,
         this.desc, this.extendNew, this.extendRev, this.usn, this.collapsed, this.browserCollapsed,
-        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn)
+        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched)
 
 fun Deck.html() = """
 <table><tbody>
