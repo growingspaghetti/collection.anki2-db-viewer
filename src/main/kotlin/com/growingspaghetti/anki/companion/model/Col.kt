@@ -63,12 +63,18 @@ data class Deck(
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         val timeToday: Pair<Int, Int>,
         val dyn: Int,
-        val resched: String?
+        val resched: Boolean?,
+        // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L35 defaultDynamicDeck
+        val terms: List<Any>?,
+        val separate: Boolean?,
+        val delays: List<Int>?,
+        val previewDelay: Int?
+
 ) {
     companion object {
         fun columnIdentifiers() = arrayOf("name", "id", "mod", "mid", "conf",
                 "desc", "extendNew", "extendRev", "usn", "collapsed", "browserCollapsed",
-                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched")
+                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched", "terms", "separate", "delays", "previewDelay")
     }
 }
 
@@ -85,7 +91,7 @@ fun Deck.idCreationDate() = Date(this.id)
 fun Deck.modModifiedDate() = Date(this.mod * 1000)
 fun Deck.row() = arrayOf(this.name, this.id, this.mod, this.mid, this.conf,
         this.desc, this.extendNew, this.extendRev, this.usn, this.collapsed, this.browserCollapsed,
-        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched)
+        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched, this.terms, this.separate, this.delays, this.previewDelay)
 
 fun Deck.html() = """
 <table><tbody>

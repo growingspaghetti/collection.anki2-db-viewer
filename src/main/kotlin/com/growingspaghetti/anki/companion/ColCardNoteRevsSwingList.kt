@@ -5,17 +5,19 @@ import javazoom.jl.player.advanced.PlaybackEvent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.io.File
-import java.io.FileInputStream
+import java.lang.Exception
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
-import kotlin.collections.ArrayList
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
 
 class ColCardNoteRevsSwingList(
-        private val editorPane: JEditorPane,
-        private val collectionMediaDir: File,
-        private val playAudioCheckBox: JCheckBox
+    private val editorPane: JEditorPane,
+    private val collectionMediaDir: File,
+    private val playAudioCheckBox: JCheckBox
 ) : JList<ColCardNoteRevs>(), PlaybackEventHandleable {
     private val list: MutableList<ColCardNoteRevs> = ArrayList()
     private val model: DefaultListModel<ColCardNoteRevs> = DefaultListModel()
@@ -73,9 +75,31 @@ class ColCardNoteRevsSwingList(
                     while (m.find()) {
                         val f = File("${collectionMediaDir.absolutePath}/" + m.group(1))
                         if (playAudioCheckBox.isSelected) {
+                            //CompletableFuture.runAsync(Runnable {
+                            //    Mp3Player.play(FileInputStream(f), this)
+                            //})
                             CompletableFuture.runAsync(Runnable {
-                                Mp3Player.play(FileInputStream(f), this)
-                            })
+                                try {
+                                    val command: MutableList<String> = ArrayList()
+                                    command.add("ffplay")
+                                    command.add("-nodisp")
+                                    // https://unix.stackexchange.com/questions/75421/command-line-audio-player-that-exits-immediately-after-file-finished-playing-bac
+                                    command.add("-autoexit")
+                                    command.add(f.getAbsolutePath())
+                                    val pb = ProcessBuilder(command)
+                                    pb.redirectErrorStream(true)
+                                    val p = pb.start()
+                                    // https://stackoverflow.com/questions/5483830/process-waitfor-never-returns
+                                    val reader = BufferedReader(InputStreamReader(p.getInputStream()))
+                                    var line: String
+                                    while (reader.readLine().also { line = it } != null) println("$line")
+                                    println(p.waitFor())
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }).whenComplete { result, exception ->
+                                handlePlayback()
+                            }
                         }
                         m.appendReplacement(sb, "")
                     }
@@ -94,16 +118,25 @@ class ColCardNoteRevsSwingList(
                 }
 
                 val revs = """
-                    ${ccnr.card.queueEnum()}[${ccnr.card.reps}](ivl ${ccnr.card.ivlReadable()} x ${ccnr.card.factorReadable()})@${ccnr.card.dueReadable(Date(ccnr.col.crt * 1000))}
+                    ${ccnr.card.queueEnum()}[${ccnr.card.reps}](ivl ${ccnr.card.ivlReadable()} x ${ccnr.card.factorReadable()})@${
+                    ccnr.card.dueReadable(
+                        Date(ccnr.col.crt * 1000)
+                    )
+                }
                     -- ${ccnr.revs.map { SIMPLE_DATE_FORMAT.format(Date(it.id)) }}
                 """.trimIndent()
-                editorPane.text = "<html><div style=\"font-size:20px\">$revs<hr><table valign=\"top\">\n<tr><td>$ans</td></tr></table></div></html>"
+                editorPane.text =
+                    "<html><div style=\"font-size:20px\">$revs<hr><table valign=\"top\">\n<tr><td>$ans</td></tr></table></div></html>"
             }
 
         }
     }
 
     override fun handlePlayback(evt: PlaybackEvent) {
+        handlePlayback()
+    }
+
+    private fun handlePlayback() {
         if (!playAudioCheckBox.isSelected) {
             return
         }
