@@ -64,12 +64,22 @@ class ColCardNoteRevsSwingList(
                 model.flds.map { it.ord to it.name }
                 val fields = ccnr.note.fldFieldList()
                 var ans = model.tmpls[0].afmt
+                var top = model.tmpls[0].qfmt
+                println(top)
                 model.flds.forEach {
-                    ans = ans.replace("{{" + it.name + "}}\n", fields[it.ord])
+                    println(it.name)
+                    ans = ans.replace("{{" + it.name + "}}", fields[it.ord])
+                    top = top.replace("{{" + it.name + "}}", fields[it.ord])
                 }
                 ans = ans.replace("src=\"", "src=\"file:${collectionMediaDir.absolutePath}/")
-
+                println(top)
                 run {
+
+                    val t = MP3_PA.matcher(top)
+                    var tf : File? = null;
+                    if (t.find()) {
+                        tf = File("${collectionMediaDir.absolutePath}/" + t.group(1))
+                    }
                     val m = MP3_PA.matcher(ans)
                     val sb = StringBuffer()
                     while (m.find()) {
@@ -79,6 +89,26 @@ class ColCardNoteRevsSwingList(
                             //    Mp3Player.play(FileInputStream(f), this)
                             //})
                             CompletableFuture.runAsync(Runnable {
+                                tf?.let {
+                                    try {
+                                        val command: MutableList<String> = ArrayList()
+                                        command.add("ffplay")
+                                        command.add("-nodisp")
+                                        // https://unix.stackexchange.com/questions/75421/command-line-audio-player-that-exits-immediately-after-file-finished-playing-bac
+                                        command.add("-autoexit")
+                                        command.add(tf.getAbsolutePath())
+                                        val pb = ProcessBuilder(command)
+                                        pb.redirectErrorStream(true)
+                                        val p = pb.start()
+                                        // https://stackoverflow.com/questions/5483830/process-waitfor-never-returns
+                                        val reader = BufferedReader(InputStreamReader(p.getInputStream()))
+                                        var line: String
+                                        while (reader.readLine().also { line = it } != null) println("$line")
+                                        println(p.waitFor())
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
                                 try {
                                     val command: MutableList<String> = ArrayList()
                                     command.add("ffplay")

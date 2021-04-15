@@ -156,7 +156,9 @@ data class Templ(
         val did: kotlin.Any?, // null by default
         val name: String,
         val ord: Int,
-        val qfmt: String // format of question
+        val qfmt: String, // format of question
+        val bfont: String?,
+        val bsize: Int?
 )
 
 fun Col.modelList(): List<Model> {
