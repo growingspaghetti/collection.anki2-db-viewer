@@ -4,14 +4,14 @@ import com.growingspaghetti.anki.companion.model.*
 import javazoom.jl.player.advanced.PlaybackEvent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.io.BufferedReader
 import java.io.File
-import java.lang.Exception
+import java.io.InputStreamReader
+import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 
 class ColCardNoteRevsSwingList(
@@ -59,24 +59,22 @@ class ColCardNoteRevsSwingList(
             }
             val ccnr: ColCardNoteRevs? = selectedValue
             ccnr?.let {
+                val startTime = System.currentTimeMillis()
                 val modelMap = ccnr.col.modelListLazy().map { it.id to it }.toMap()
                 val model = modelMap[ccnr.note.mid] ?: error("")
                 model.flds.map { it.ord to it.name }
                 val fields = ccnr.note.fldFieldList()
                 var ans = model.tmpls[0].afmt
                 var top = model.tmpls[0].qfmt
-                println(top)
                 model.flds.forEach {
-                    println(it.name)
                     ans = ans.replace("{{" + it.name + "}}", fields[it.ord])
                     top = top.replace("{{" + it.name + "}}", fields[it.ord])
                 }
                 ans = ans.replace("src=\"", "src=\"file:${collectionMediaDir.absolutePath}/")
-                println(top)
                 run {
 
                     val t = MP3_PA.matcher(top)
-                    var tf : File? = null;
+                    var tf: File? = null;
                     if (t.find()) {
                         tf = File("${collectionMediaDir.absolutePath}/" + t.group(1))
                     }
@@ -103,8 +101,8 @@ class ColCardNoteRevsSwingList(
                                         // https://stackoverflow.com/questions/5483830/process-waitfor-never-returns
                                         val reader = BufferedReader(InputStreamReader(p.getInputStream()))
                                         var line: String
-                                        while (reader.readLine().also { line = it } != null) println("$line")
-                                        println(p.waitFor())
+                                        while (reader.readLine().also { line = it } != null) {
+                                        }
                                     } catch (e: Exception) {
                                         e.printStackTrace()
                                     }
@@ -122,12 +120,25 @@ class ColCardNoteRevsSwingList(
                                     // https://stackoverflow.com/questions/5483830/process-waitfor-never-returns
                                     val reader = BufferedReader(InputStreamReader(p.getInputStream()))
                                     var line: String
-                                    while (reader.readLine().also { line = it } != null) println("$line")
-                                    println(p.waitFor())
+                                    while (reader.readLine().also { line = it } != null) {
+                                    }
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
                             }).whenComplete { result, exception ->
+                                val time = when (val delta = System.currentTimeMillis() - startTime) {
+                                    in 0..60000 -> delta
+                                    else -> 60000
+                                }
+                                // usn -1=upload
+                                // type 3=cram
+                                // ease 2=ok (cram mode)
+                                val revLast = it.revs.last();
+                                val query =
+                                    "INSERT INTO \"revlog\" (id, cid, usn, ease, ivl, lastIvl, factor, time, type) " +
+                                            "VALUES(${startTime}, ${it.card.id}, -1, 2, ${revLast.ivl}, ${revLast.lastIvl}, ${revLast.factor}, ${time}, 3);\n"
+                                val today = DATE_FORMATTER.format(LocalDateTime.now())
+                                File("cram-sql-${today}.txt").appendText(query)
                                 handlePlayback()
                             }
                         }
