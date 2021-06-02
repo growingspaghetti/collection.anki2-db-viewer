@@ -1,6 +1,7 @@
 package com.growingspaghetti.anki.companion.model
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.growingspaghetti.anki.companion.KtObjectMapper
 import java.math.BigDecimal
 import java.util.*
@@ -68,13 +69,15 @@ data class Deck(
         val terms: List<Any>?,
         val separate: Boolean?,
         val delays: List<Int>?,
-        val previewDelay: Int?
+        val previewDelay: Int?,
+        @JsonProperty("return")
+        val return_: Boolean?
 
 ) {
     companion object {
         fun columnIdentifiers() = arrayOf("name", "id", "mod", "mid", "conf",
                 "desc", "extendNew", "extendRev", "usn", "collapsed", "browserCollapsed",
-                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched", "terms", "separate", "delays", "previewDelay")
+                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched", "terms", "separate", "delays", "previewDelay", "return")
     }
 }
 
@@ -91,7 +94,7 @@ fun Deck.idCreationDate() = Date(this.id)
 fun Deck.modModifiedDate() = Date(this.mod * 1000)
 fun Deck.row() = arrayOf(this.name, this.id, this.mod, this.mid, this.conf,
         this.desc, this.extendNew, this.extendRev, this.usn, this.collapsed, this.browserCollapsed,
-        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched, this.terms, this.separate, this.delays, this.previewDelay)
+        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched, this.terms, this.separate, this.delays, this.previewDelay, this.return_)
 
 fun Deck.html() = """
 <table><tbody>

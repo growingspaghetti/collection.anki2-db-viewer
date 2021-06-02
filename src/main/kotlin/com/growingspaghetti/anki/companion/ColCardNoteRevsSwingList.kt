@@ -126,8 +126,8 @@ class ColCardNoteRevsSwingList(
                                     e.printStackTrace()
                                 }
                             }).whenComplete { result, exception ->
-                                val time = when (val delta = System.currentTimeMillis() - startTime) {
-                                    in 0..60000 -> delta
+                                val time = when (val t = System.currentTimeMillis() - startTime) {
+                                    in 0..60000 -> t
                                     else -> 60000
                                 }
                                 // usn -1=upload
