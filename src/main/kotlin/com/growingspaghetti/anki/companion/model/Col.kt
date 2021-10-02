@@ -115,7 +115,7 @@ data class Model(
         val name: String,
         val flds: List<Fld>,
         val tmpls: List<Templ>,
-        val tags: List<String>,
+        val tags: List<String>?,
         @JsonFormat(shape = JsonFormat.Shape.ARRAY)
         val req: List<Triple<Int, String, List<Int>>>?,
         val vers: List<kotlin.Any>?, // not used
