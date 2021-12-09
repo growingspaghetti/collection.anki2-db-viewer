@@ -55,15 +55,17 @@ class AnkiDbService(private val sqliteDbResolver: SqliteDbResolvable) {
 
     fun queues(deckName: String, targetDate: Date): List<ColCardNoteRevs> {
         val col = colLazy()
-        val deckId = decks().find { it.name == deckName }!!.id
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        val diff: Long =  targetDate.time - calendar.time.time
-        val dateOffset = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS).toInt()
         val cards = ArrayList<Card>()
-        cards.addAll(sqliteRepository.queueReview(deckId, col, dateOffset))
-        cards.addAll(sqliteRepository.queueLearning(deckId, dateOffset))
-        cards.addAll(sqliteRepository.queueDayRelearn(deckId, col, dateOffset))
+        decks().filter { it.name == deckName || it.name.startsWith("${deckName}::") }.forEach{
+            val deckId = it.id
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            val diff: Long =  targetDate.time - calendar.time.time
+            val dateOffset = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS).toInt()
+            cards.addAll(sqliteRepository.queueReview(deckId, col, dateOffset))
+            cards.addAll(sqliteRepository.queueLearning(deckId, dateOffset))
+            cards.addAll(sqliteRepository.queueDayRelearn(deckId, col, dateOffset))
+        }
         val notes = sqliteRepository.findByIds(cards.map { it.nid }, "notes", Note::class.java)
         val noteMap = notes.map { it.id to it }.toMap()
         val revLogLists = sqliteRepository.findRevLogsByCids(cards.map { it.id })

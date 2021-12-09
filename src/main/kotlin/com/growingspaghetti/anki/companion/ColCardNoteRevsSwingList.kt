@@ -10,6 +10,7 @@ import java.io.InputStreamReader
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 
@@ -21,7 +22,7 @@ class ColCardNoteRevsSwingList(
 ) : JList<ColCardNoteRevs>(), PlaybackEventHandleable {
     private val list: MutableList<ColCardNoteRevs> = ArrayList()
     private val model: DefaultListModel<ColCardNoteRevs> = DefaultListModel()
-    private var job: Job? = null
+    private var job: Optional<Job> = Optional.empty()
 
     init {
         setModel(model)
@@ -32,10 +33,10 @@ class ColCardNoteRevsSwingList(
     }
 
     fun setList(colCardNoteRevs: List<ColCardNoteRevs>) {
-        job?.cancel()
+        job.ifPresent { j -> j.cancel() }
         list.clear()
         model.clear()
-        job = GlobalScope.launch(Dispatchers.Main) {
+        job = Optional.of(GlobalScope.launch(Dispatchers.Main) {
             val channel = Channel<ColCardNoteRevs>()
             GlobalScope.launch {
                 colCardNoteRevs.forEach {
@@ -48,7 +49,7 @@ class ColCardNoteRevsSwingList(
                     model.addElement(y)
                 }
             }
-        }
+        })
         list.addAll(colCardNoteRevs)
     }
 
@@ -94,7 +95,7 @@ class ColCardNoteRevsSwingList(
                                         command.add("-nodisp")
                                         // https://unix.stackexchange.com/questions/75421/command-line-audio-player-that-exits-immediately-after-file-finished-playing-bac
                                         command.add("-autoexit")
-                                        command.add(tf.getAbsolutePath())
+                                        command.add(tf.absolutePath)
                                         val pb = ProcessBuilder(command)
                                         pb.redirectErrorStream(true)
                                         val p = pb.start()
@@ -113,7 +114,7 @@ class ColCardNoteRevsSwingList(
                                     command.add("-nodisp")
                                     // https://unix.stackexchange.com/questions/75421/command-line-audio-player-that-exits-immediately-after-file-finished-playing-bac
                                     command.add("-autoexit")
-                                    command.add(f.getAbsolutePath())
+                                    command.add(f.absolutePath)
                                     val pb = ProcessBuilder(command)
                                     pb.redirectErrorStream(true)
                                     val p = pb.start()
@@ -125,7 +126,7 @@ class ColCardNoteRevsSwingList(
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
-                            }).whenComplete { result, exception ->
+                            }).whenComplete { _, _ ->
                                 val time = when (val t = System.currentTimeMillis() - startTime) {
                                     in 0..60000 -> t
                                     else -> 60000
@@ -143,6 +144,13 @@ class ColCardNoteRevsSwingList(
                             }
                         }
                         m.appendReplacement(sb, "")
+                    }
+                    if (!MP3_PA.matcher(ans).find()) {
+                        CompletableFuture.runAsync(Runnable {
+                            TimeUnit.SECONDS.sleep(2L)
+                        }).whenComplete { _, _ ->
+                            handlePlayback()
+                        }
                     }
                     m.appendTail(sb)
                     ans = sb.toString()
