@@ -53,6 +53,34 @@ class ColCardNoteRevsSwingList(
         list.addAll(colCardNoteRevs)
     }
 
+    fun exportMp3() {
+        val sb = StringBuffer()
+        for (e in model.elements()) {
+            val modelMap = e.col.modelListLazy().associateBy { it.id }
+            val model = modelMap[e.note.mid] ?: error("")
+            model.flds.map { it.ord to it.name }
+            val fields = e.note.fldFieldList()
+            var ans = model.tmpls[0].afmt
+            var top = model.tmpls[0].qfmt
+            model.flds.forEach {
+                ans = ans.replace("{{" + it.name + "}}", fields[it.ord])
+                top = top.replace("{{" + it.name + "}}", fields[it.ord])
+            }
+            run {
+                val t = MP3_PA.matcher(top)
+                var tf: File? = null;
+                if (t.find()) {
+                    sb.append("file '${collectionMediaDir.absolutePath}/${t.group(1)}'\n")
+                }
+                val m = MP3_PA.matcher(ans)
+                while (m.find()) {
+                    sb.append("file '${collectionMediaDir.absolutePath}/${m.group(1)}'\n")
+                }
+            }
+        }
+        File("mp3s.txt").writeText(sb.toString())
+    }
+
     private fun applySelectionListener() {
         addListSelectionListener { e: ListSelectionEvent ->
             if (e.valueIsAdjusting) {
@@ -61,7 +89,7 @@ class ColCardNoteRevsSwingList(
             val ccnr: ColCardNoteRevs? = selectedValue
             ccnr?.let {
                 val startTime = System.currentTimeMillis()
-                val modelMap = ccnr.col.modelListLazy().map { it.id to it }.toMap()
+                val modelMap = ccnr.col.modelListLazy().associateBy { it.id }
                 val model = modelMap[ccnr.note.mid] ?: error("")
                 model.flds.map { it.ord to it.name }
                 val fields = ccnr.note.fldFieldList()

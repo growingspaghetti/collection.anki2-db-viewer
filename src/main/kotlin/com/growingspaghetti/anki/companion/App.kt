@@ -2,7 +2,6 @@ package com.growingspaghetti.anki.companion
 
 import com.formdev.flatlaf.FlatLightLaf
 import com.growingspaghetti.anki.companion.service.AnkiDbService
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
 import java.awt.*
 import java.awt.event.ActionListener
 import java.io.File
@@ -60,6 +59,12 @@ class App : JFrame(), SqliteDbResolvable {
                     colCardNoteRevsSwingList.setList(colCardNoteRevsList)
                 })
             })
+
+            val exportMp3Button = JButton("Export mp3 list")
+            add(exportMp3Button)
+            exportMp3Button.addActionListener {
+                colCardNoteRevsSwingList.exportMp3()
+            }
         }
 
         preferredSize = Dimension(600, 800)
@@ -139,7 +144,7 @@ class App : JFrame(), SqliteDbResolvable {
         return if (collectionUnderCurrentDir.exists()) {
             collectionUnderCurrentDir
         } else {
-            File(System.getProperty("user.home") + "/.local/share/Anki2/User 1/collection.anki2")
+            File(System.getProperty("user.home") + "/.local/share/Anki2/english/collection.anki2")
         }
     }
 }
