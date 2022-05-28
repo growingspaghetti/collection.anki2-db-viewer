@@ -121,7 +121,7 @@ data class Model(
         val vers: List<kotlin.Any>?, // not used
         val sortf: Int,
         val mod: Long,
-        val did: Int,
+        val did: Long,
         val type: Int,
         val latexPre: String,
         val latexPost: String,

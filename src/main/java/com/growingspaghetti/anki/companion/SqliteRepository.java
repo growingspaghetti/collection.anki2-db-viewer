@@ -5,7 +5,6 @@ import com.growingspaghetti.anki.companion.model.Card;
 import com.growingspaghetti.anki.companion.model.Col;
 import com.growingspaghetti.anki.companion.model.Queue;
 import com.growingspaghetti.anki.companion.model.RevLog;
-import kotlin.reflect.jvm.internal.impl.utils.StringsKt;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -40,7 +39,7 @@ public class SqliteRepository {
   // https://github.com/ankitects/anki/blob/master/pylib/anki/schedv2.py#L545
   public List<Card> queue(long deckId, Queue queue, long due) throws Exception {
     try (Connection conn = getConnection(true)) {
-      String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 256";
+      String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 1024";
       List<Map<String, Object>> mapList = runner
           .query(conn, sql, new MapListHandler(), deckId, queue.getV(), due);
       return mapList.stream()
@@ -69,7 +68,7 @@ public class SqliteRepository {
   public <T> List<T> findByIds(List<Long> ids, String tableName, Class<T> clazz) throws Exception {
     try (Connection conn = getConnection(true)) {
       String sql = String.format("SELECT * FROM %s WHERE id IN (%s)",
-          tableName, StringsKt.join(ids, ","));
+          tableName, ids.stream().map(String::valueOf).collect(Collectors.joining(",")));
       List<Map<String, Object>> mapList = runner
           .query(conn, sql, new MapListHandler());
       return mapList.stream()
@@ -80,7 +79,7 @@ public class SqliteRepository {
 
   public List<RevLog> findRevLogsByCids(List<Long> ids) throws Exception {
     try (Connection conn = getConnection(true)) {
-      String sql = String.format("SELECT * FROM revlog WHERE cid IN (%s)", StringsKt.join(ids, ","));
+      String sql = String.format("SELECT * FROM revlog WHERE cid IN (%s)", ids.stream().map(String::valueOf).collect(Collectors.joining(",")));
       List<Map<String, Object>> mapList = runner
           .query(conn, sql, new MapListHandler());
       return mapList.stream()

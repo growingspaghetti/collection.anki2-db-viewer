@@ -9,7 +9,7 @@ data class Note(
         val tags: String,
         val flds: String,
         val sfld: String,
-        val csum: Int,
+        val csum: Long,
         val flags: Int,
         val data: String
 ){

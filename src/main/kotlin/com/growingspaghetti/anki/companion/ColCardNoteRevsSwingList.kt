@@ -191,7 +191,7 @@ class ColCardNoteRevsSwingList(
                     }
                     sb.append("</td><td>")
                     m.appendTail(sb)
-                    ans = sb.toString()
+                    ans = sb.toString().replace("img", "img width='400'")
                 }
 
                 val revs = """
