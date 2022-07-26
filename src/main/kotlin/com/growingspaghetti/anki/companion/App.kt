@@ -17,6 +17,7 @@ class App : JFrame(), SqliteDbResolvable {
     private val jEditorPane = JEditorPane()
     private val jTabbedPane = JTabbedPane()
     private val playAudioCheckBox = JCheckBox("Play audio & scroll automatically")
+    private val ivlPanel = IvlPanel()
 
     init {
         layout = BorderLayout()
@@ -25,7 +26,7 @@ class App : JFrame(), SqliteDbResolvable {
         RepeatingReleasedEventsFixer().install()
         val centerPanel = JPanel(BorderLayout())
         add(jTabbedPane, BorderLayout.CENTER)
-        val colCardNoteRevsSwingList = ColCardNoteRevsSwingList(jEditorPane, collectionMediaDir(), playAudioCheckBox)
+        val colCardNoteRevsSwingList = ColCardNoteRevsSwingList(jEditorPane, collectionMediaDir(), playAudioCheckBox, ivlPanel)
         jTabbedPane.add(centerPanel, "Review")
 
         centerPanel.add(JScrollPane(colCardNoteRevsSwingList), BorderLayout.CENTER)
@@ -114,6 +115,7 @@ class App : JFrame(), SqliteDbResolvable {
             })
 
             add(editorPanel)
+            editorPanel.add(ivlPanel, BorderLayout.SOUTH)
             preferredSize = Dimension(600, 800)
             pack()
             setLocation(600, 0)

@@ -18,7 +18,8 @@ import javax.swing.event.ListSelectionEvent
 class ColCardNoteRevsSwingList(
     private val editorPane: JEditorPane,
     private val collectionMediaDir: File,
-    private val playAudioCheckBox: JCheckBox
+    private val playAudioCheckBox: JCheckBox,
+    private val ivlPanel: IvlPanel,
 ) : JList<ColCardNoteRevs>(), PlaybackEventHandleable {
     private val list: MutableList<ColCardNoteRevs> = ArrayList()
     private val model: DefaultListModel<ColCardNoteRevs> = DefaultListModel()
@@ -204,6 +205,7 @@ class ColCardNoteRevsSwingList(
                 """.trimIndent()
                 editorPane.text =
                     "<html><div style=\"font-size:20px\">$revs<hr><table valign=\"top\">\n<tr><td>$ans</td></tr></table></div></html>"
+                ivlPanel.setCard(ccnr.col.crt, ccnr.card)
             }
 
         }
