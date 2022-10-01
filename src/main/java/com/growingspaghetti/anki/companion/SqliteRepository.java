@@ -39,7 +39,7 @@ public class SqliteRepository {
   // https://github.com/ankitects/anki/blob/master/pylib/anki/schedv2.py#L545
   public List<Card> queue(long deckId, Queue queue, long due) throws Exception {
     try (Connection conn = getConnection(true)) {
-      String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 1024";
+      String sql = "SELECT * FROM cards WHERE did = ? AND queue = ? AND due < ? ORDER BY due LIMIT 4096";
       List<Map<String, Object>> mapList = runner
           .query(conn, sql, new MapListHandler(), deckId, queue.getV(), due);
       return mapList.stream()

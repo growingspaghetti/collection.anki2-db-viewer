@@ -57,29 +57,32 @@ class ColCardNoteRevsSwingList(
     fun exportMp3() {
         val sb = StringBuffer()
         for (e in model.elements()) {
-            val modelMap = e.col.modelListLazy().associateBy { it.id }
+            val modelMap = e.templates.associateBy { it.ntid }
             val model = modelMap[e.note.mid] ?: error("")
-            model.flds.map { it.ord to it.name }
+            val fieldsList = e.fields.filter { it.ntid == e.note.mid }
             val fields = e.note.fldFieldList()
-            var ans = model.tmpls[0].afmt
-            var top = model.tmpls[0].qfmt
-            model.flds.forEach {
+            println(fields)
+            var ans = String(model.config)
+            println(ans)
+            //var top = model.tmpls[0].qfmt
+            ans = ans.split("\u0012�\u0002")[0]
+            fieldsList.forEach {
                 ans = ans.replace("{{" + it.name + "}}", fields[it.ord])
-                top = top.replace("{{" + it.name + "}}", fields[it.ord])
+                //top = top.replace("{{" + it.name + "}}", fields[it.ord])
             }
             run {
-                val t = MP3_PA.matcher(top)
-                var tf: File? = null;
-                if (t.find()) {
-                    sb.append("file '${collectionMediaDir.absolutePath}/${t.group(1)}'\n")
-                }
+//                val t = MP3_PA.matcher(top)
+//                var tf: File? = null;
+//                if (t.find()) {
+//                    sb.append("file '${collectionMediaDir.absolutePath}/${t.group(1)}'\n")
+//                }
                 val m = MP3_PA.matcher(ans)
                 while (m.find()) {
                     sb.append("file '${collectionMediaDir.absolutePath}/${m.group(1)}'\n")
                 }
             }
         }
-        File("mp3s.txt").writeText(sb.toString())
+        File("mp3s.txt").appendText(sb.toString())
     }
 
     private fun applySelectionListener() {
@@ -89,6 +92,7 @@ class ColCardNoteRevsSwingList(
             }
             val ccnr: ColCardNoteRevs? = selectedValue
             ccnr?.let {
+                println(ccnr.note)
                 val startTime = System.currentTimeMillis()
                 val modelMap = ccnr.col.modelListLazy().associateBy { it.id }
                 val model = modelMap[ccnr.note.mid] ?: error("")

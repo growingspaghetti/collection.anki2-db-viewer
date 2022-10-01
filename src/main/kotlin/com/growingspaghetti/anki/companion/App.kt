@@ -1,6 +1,7 @@
 package com.growingspaghetti.anki.companion
 
 import com.formdev.flatlaf.FlatLightLaf
+import com.growingspaghetti.anki.companion.model.nameStr
 import com.growingspaghetti.anki.companion.service.AnkiDbService
 import java.awt.*
 import java.awt.event.ActionListener
@@ -34,13 +35,13 @@ class App : JFrame(), SqliteDbResolvable {
         centerPanel.add(controlPanel, BorderLayout.NORTH)
         with(controlPanel) {
             val decksModel = DefaultComboBoxModel<String>()
-            ankiDbService.decks().forEach { decksModel.addElement(it.name) }
+            ankiDbService.decksLazy().forEach { decksModel.addElement(it.nameStr()) }
             val deckComboBox = JComboBox(decksModel)
-            deckComboBox.selectedIndex = 0
+            //deckComboBox.selectedIndex = 0
             add(deckComboBox)
 
             val datesModel = DefaultComboBoxModel<String>()
-            for (i in -10..4) {
+            for (i in -10..10) {
                 val calendar = Calendar.getInstance()
                 calendar.add(Calendar.DAY_OF_YEAR, i)
                 datesModel.addElement(DATE_FORMATTER.format(calendar.toInstant()))

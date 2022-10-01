@@ -5,6 +5,8 @@ import java.util.*
 
 data class ColCardNoteRevs(
         val col: Col,
+        val templates: List<Template>,
+        val fields: List<Field>,
         val card: Card,
         val note: Note,
         val revs: List<RevLog>

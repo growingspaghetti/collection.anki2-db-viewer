@@ -3,6 +3,7 @@ package com.growingspaghetti.anki.companion.model
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.growingspaghetti.anki.companion.KtObjectMapper
+import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.util.*
 
@@ -10,19 +11,19 @@ import java.util.*
  * Col is about collection
  */
 data class Col(
-        val id: Long,
-        val crt: Long, // creation time. seconds.
-        val mod: Long,
-        val scm: Long, // schema modified time
-        val ver: Int,
-        val dty: Int, // dirty. not used
-        val usn: Int, // update sequence number
-        val ls: Long, // last sync time
-        val conf: String,
-        val models: String,
-        val decks: String,
-        val dconf: String,
-        val tags: String
+    val id: Long,
+    val crt: Long, // creation time. seconds.
+    val mod: Long,
+    val scm: Long, // schema modified time
+    val ver: Int,
+    val dty: Int, // dirty. not used
+    val usn: Int, // update sequence number
+    val ls: Long, // last sync time
+    val conf: String,
+    val models: String,
+    val decks: String,
+    val dconf: String,
+    val tags: String
 )
 
 fun Col.crtCreationDate() = Date(this.crt * 1000)
@@ -42,59 +43,123 @@ fun Col.html() = """
 </tbody></table>
 """.trimIndent()
 
+fun Deck50.nameStr(): String {
+//    val sb = StringBuilder()
+//    name.forEach {
+//        if (it.toInt() == 0x1f) {
+//            sb.append("::")
+//        } else {
+//            sb.append(it)
+//        }
+//    }
+//    return sb.toString()
+    return name.replace("\u001F", "::")
+}
+data class Deck50(
+    val id: Long,
+    val name: String,
+    @JsonProperty("mtime_secs")
+    val mtimeSecs: Long,
+    val usn: Int,
+    val common: ByteArray,
+    val kind: ByteArray,
+) {}
+
 data class Deck(
-        val id: Long,
-        val mod: Long,
-        val mid: Long,
-        val conf: Long,
-        val name: String,
-        val desc: String,
-        val extendNew: Int,
-        val extendRev: Int,
-        val usn: Int,
-        val collapsed: Boolean,
-        val browserCollapsed: Boolean,
-        // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L21
-        @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-        val newToday: Pair<Int, Int>,
-        @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-        val revToday: Pair<Int, Int>,
-        @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-        val lrnToday: Pair<Int, Int>,
-        @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-        val timeToday: Pair<Int, Int>,
-        val dyn: Int,
-        val resched: Boolean?,
-        // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L35 defaultDynamicDeck
-        val terms: List<Any>?,
-        val separate: Boolean?,
-        val delays: List<Int>?,
-        val previewDelay: Int?,
-        @JsonProperty("return")
-        val return_: Boolean?
+    val id: Long,
+    val mod: Long,
+    val mid: Long,
+    val conf: Long,
+    val name: String,
+    val desc: String,
+    val extendNew: Int,
+    val extendRev: Int,
+    val usn: Int,
+    val collapsed: Boolean,
+    val browserCollapsed: Boolean,
+    // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L21
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val newToday: Pair<Int, Int>,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val revToday: Pair<Int, Int>,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val lrnToday: Pair<Int, Int>,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val timeToday: Pair<Int, Int>,
+    val dyn: Int,
+    val resched: Boolean?,
+    // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L35 defaultDynamicDeck
+    val terms: List<Any>?,
+    val separate: Boolean?,
+    val delays: List<Int>?,
+    val previewDelay: Int?,
+    @JsonProperty("return")
+    val return_: Boolean?
 
 ) {
     companion object {
-        fun columnIdentifiers() = arrayOf("name", "id", "mod", "mid", "conf",
-                "desc", "extendNew", "extendRev", "usn", "collapsed", "browserCollapsed",
-                "newToday", "revToday", "lrnToday", "timeToday", "dyn", "resched", "terms", "separate", "delays", "previewDelay", "return")
+        fun columnIdentifiers() = arrayOf(
+            "name",
+            "id",
+            "mod",
+            "mid",
+            "conf",
+            "desc",
+            "extendNew",
+            "extendRev",
+            "usn",
+            "collapsed",
+            "browserCollapsed",
+            "newToday",
+            "revToday",
+            "lrnToday",
+            "timeToday",
+            "dyn",
+            "resched",
+            "terms",
+            "separate",
+            "delays",
+            "previewDelay",
+            "return"
+        )
     }
 }
 
 fun Col.deckList(): List<Deck> {
     val decks = KtObjectMapper.mapper.readTree(this.decks)
     return decks
-            .fields()
-            .asSequence()
-            .map { KtObjectMapper.mapper.convertValue(it.value, Deck::class.java) }
-            .toList()
+        .fields()
+        .asSequence()
+        .map { KtObjectMapper.mapper.convertValue(it.value, Deck::class.java) }
+        .toList()
 }
 
 fun Deck.idCreationDate() = Date(this.id)
 fun Deck.modModifiedDate() = Date(this.mod * 1000)
-fun Deck.row() = arrayOf(this.name, this.id, this.mod, this.mid, this.conf,
-        this.desc, this.extendNew, this.extendRev, this.usn, this.collapsed, this.browserCollapsed,
-        this.newToday, this.revToday, this.lrnToday, this.timeToday, this.dyn, this.resched, this.terms, this.separate, this.delays, this.previewDelay, this.return_)
+fun Deck.row() = arrayOf(
+    this.name,
+    this.id,
+    this.mod,
+    this.mid,
+    this.conf,
+    this.desc,
+    this.extendNew,
+    this.extendRev,
+    this.usn,
+    this.collapsed,
+    this.browserCollapsed,
+    this.newToday,
+    this.revToday,
+    this.lrnToday,
+    this.timeToday,
+    this.dyn,
+    this.resched,
+    this.terms,
+    this.separate,
+    this.delays,
+    this.previewDelay,
+    this.return_
+)
 
 fun Deck.html() = """
 <table><tbody>
@@ -111,66 +176,70 @@ fun Deck.html() = """
 
 
 data class Model(
-        val id: Long,
-        val name: String,
-        val flds: List<Fld>,
-        val tmpls: List<Templ>,
-        val tags: List<String>?,
-        @JsonFormat(shape = JsonFormat.Shape.ARRAY)
-        val req: List<Triple<Int, String, List<Int>>>?,
-        val vers: List<kotlin.Any>?, // not used
-        val sortf: Int,
-        val mod: Long,
-        val did: Long,
-        val type: Int,
-        val latexPre: String,
-        val latexPost: String,
-        val css: String,
-        val usn: Int,
-        val latexsvg: Boolean?
+    val id: Long,
+    val name: String,
+    val flds: List<Fld>,
+    val tmpls: List<Templ>,
+    val tags: List<String>?,
+    @JsonFormat(shape = JsonFormat.Shape.ARRAY)
+    val req: List<Triple<Int, String, List<Int>>>?,
+    val vers: List<kotlin.Any>?, // not used
+    val sortf: Int,
+    val mod: Long,
+    val did: Long,
+    val type: Int,
+    val latexPre: String,
+    val latexPost: String,
+    val css: String,
+    val usn: Int,
+    val latexsvg: Boolean?
 ) {
     companion object {
-        fun columnIdentifiers() = arrayOf("name", "id", "flds", "tmpls", "tags",
-                "req", "vers", "sortf", "mod", "did", "type",
-                "latexPre", "latexPost", "css", "usn", "latexsvg")
+        fun columnIdentifiers() = arrayOf(
+            "name", "id", "flds", "tmpls", "tags",
+            "req", "vers", "sortf", "mod", "did", "type",
+            "latexPre", "latexPost", "css", "usn", "latexsvg"
+        )
     }
 }
 
 fun Model.idCreationDate() = Date(this.id)
 fun Model.modModifiedDate() = Date(this.mod * 1000)
-fun Model.row() = arrayOf(this.name, this.id, this.flds, this.tmpls, this.tags,
-        this.req, this.vers, this.sortf, this.mod, this.did, this.type,
-        this.latexPre, this.latexPost, this.css, this.usn, this.latexsvg)
+fun Model.row() = arrayOf(
+    this.name, this.id, this.flds, this.tmpls, this.tags,
+    this.req, this.vers, this.sortf, this.mod, this.did, this.type,
+    this.latexPre, this.latexPost, this.css, this.usn, this.latexsvg
+)
 
 data class Fld(
-        val ord: Int,
-        val sticky: Boolean,
-        val rtl: Boolean,
-        val media: List<kotlin.Any>?, // not used
-        val font: String,
-        val name: String,
-        val size: Int
+    val ord: Int,
+    val sticky: Boolean,
+    val rtl: Boolean,
+    val media: List<kotlin.Any>?, // not used
+    val font: String,
+    val name: String,
+    val size: Int
 );
 
 data class Templ(
-        val afmt: String, // format of answer
-        val bafmt: String,
-        val bqfmt: String,
-        val did: kotlin.Any?, // null by default
-        val name: String,
-        val ord: Int,
-        val qfmt: String, // format of question
-        val bfont: String?,
-        val bsize: Int?
+    val afmt: String, // format of answer
+    val bafmt: String,
+    val bqfmt: String,
+    val did: kotlin.Any?, // null by default
+    val name: String,
+    val ord: Int,
+    val qfmt: String, // format of question
+    val bfont: String?,
+    val bsize: Int?
 )
 
 fun Col.modelList(): List<Model> {
     val models = KtObjectMapper.mapper.readTree(this.models)
     return models
-            .fields()
-            .asSequence()
-            .map { KtObjectMapper.mapper.convertValue(it.value, Model::class.java) }
-            .toList()
+        .fields()
+        .asSequence()
+        .map { KtObjectMapper.mapper.convertValue(it.value, Model::class.java) }
+        .toList()
 }
 
 fun Col.modelListLazy(): List<Model> {
@@ -196,25 +265,25 @@ fun Model.html() = """
 
 // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/config.py
 data class Conf(
-        val activeCols: List<String>,
-        val lastUnburied: Int,
-        val nextPos: Int,
-        val sortType: String,
-        val newSpread: Int,
-        val savedFilters: kotlin.Any, // empty object {}
-        val curModel: String, // "Long"
-        val curDeck: Long,
-        val collapseTime: Int,
-        val dayLearnFirst: Boolean,
-        val timeLim: Int,
-        val dueCounts: Boolean,
-        val activeDecks: List<Long>, // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L543
-        val sortBackwards: Int, // 0 | 1 ?
-        val estTimes: Boolean,
-        val newBury: Boolean,
-        val addToCur: Boolean,
-        val nightMode: Boolean
-        // val schedVer https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/collection.py#L110
+    val activeCols: List<String>,
+    val lastUnburied: Int,
+    val nextPos: Int,
+    val sortType: String,
+    val newSpread: Int,
+    val savedFilters: kotlin.Any, // empty object {}
+    val curModel: String, // "Long"
+    val curDeck: Long,
+    val collapseTime: Int,
+    val dayLearnFirst: Boolean,
+    val timeLim: Int,
+    val dueCounts: Boolean,
+    val activeDecks: List<Long>, // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/decks.py#L543
+    val sortBackwards: Int, // 0 | 1 ?
+    val estTimes: Boolean,
+    val newBury: Boolean,
+    val addToCur: Boolean,
+    val nightMode: Boolean
+    // val schedVer https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/collection.py#L110
 )
 
 // https://github.com/ankitects/anki/blob/85b28f13d2472813cdb66151dcf0407b39b3d5c3/pylib/anki/schedv2.py#L234 due list
@@ -230,7 +299,7 @@ fun Col.confObject(): Conf {
 
 fun Conf.html(decks: List<Deck>): String {
     val curDeck = decks
-            .filter { it.id == this.curDeck }.firstOrNull()?.name
+        .filter { it.id == this.curDeck }.firstOrNull()?.name
     return """
     <table><tbody>
         <tr><td>Active columns</td><td>${this.activeCols}</td></tr>
@@ -241,57 +310,57 @@ fun Conf.html(decks: List<Deck>): String {
 }
 
 data class DConf(
-        val id: Long,
-        val dyn: Boolean,
-        val mod: Long,
-        val rev: Rev,
-        val lapse: Lapse,
-        val usn: Int,
-        val name: String,
-        val timer: Int,
-        val replayq: Boolean,
-        val new: New,
-        val autoplay: Boolean,
-        val maxTaken: Int
+    val id: Long,
+    val dyn: Boolean,
+    val mod: Long,
+    val rev: Rev,
+    val lapse: Lapse,
+    val usn: Int,
+    val name: String,
+    val timer: Int,
+    val replayq: Boolean,
+    val new: New,
+    val autoplay: Boolean,
+    val maxTaken: Int
 )
 
 fun DConf.modModifiedDate() = Date(this.mod * 1000)
 
 data class Rev(
-        val bury: Boolean,
-        val minSpace: Int,
-        val ease4: BigDecimal,
-        val ivlFct: Int,
-        val maxIvl: Int,
-        val perDay: Int,
-        val fuzz: BigDecimal
+    val bury: Boolean,
+    val minSpace: Int,
+    val ease4: BigDecimal,
+    val ivlFct: Int,
+    val maxIvl: Int,
+    val perDay: Int,
+    val fuzz: BigDecimal
 )
 
 data class Lapse(
-        val minInt: Int,
-        val leechFails: Int,
-        val mult: Int,
-        val leechAction: Int,
-        val delays: List<Int>
+    val minInt: Int,
+    val leechFails: Int,
+    val mult: Int,
+    val leechAction: Int,
+    val delays: List<Int>
 )
 
 data class New(
-        val bury: Boolean,
-        val order: Int,
-        val ints: List<Int>,
-        val separate: Boolean,
-        val perDay: Int,
-        val delays: List<Int>,
-        val initialFactor: Int
+    val bury: Boolean,
+    val order: Int,
+    val ints: List<Int>,
+    val separate: Boolean,
+    val perDay: Int,
+    val delays: List<Int>,
+    val initialFactor: Int
 )
 
 fun Col.dconfList(): List<DConf> {
     val dconf = KtObjectMapper.mapper.readTree(this.dconf)
     return dconf
-            .fields()
-            .asSequence()
-            .map { KtObjectMapper.mapper.convertValue(it.value, DConf::class.java) }
-            .toList()
+        .fields()
+        .asSequence()
+        .map { KtObjectMapper.mapper.convertValue(it.value, DConf::class.java) }
+        .toList()
 }
 
 fun DConf.html(): String {
@@ -307,9 +376,9 @@ fun DConf.html(): String {
 }
 
 data class Tags(
-        val dialogue: Int,
-        val leech: Int,
-        val marked: Int
+    val dialogue: Int,
+    val leech: Int,
+    val marked: Int
 )
 
 fun Col.tagsObject(): Tags {
